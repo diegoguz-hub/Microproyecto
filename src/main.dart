@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(const MemoryGameApp());
 
@@ -25,7 +26,6 @@ class MemoryBoard extends StatefulWidget {
 }
 
 class _MemoryBoardState extends State<MemoryBoard> {
-  // 18 pares de colores para un tablero de 36 cartas (6x6)
   final List<Color> _colors = [
     Colors.red, Colors.blue, Colors.green, Colors.yellow, Colors.orange, Colors.purple,
     Colors.pink, Colors.teal, Colors.cyan, Colors.brown, Colors.indigo, Colors.lime,
@@ -36,12 +36,49 @@ class _MemoryBoardState extends State<MemoryBoard> {
   late List<bool> _cardFliped;
   int? _firstIndex;
   bool _wait = false;
-  int _attempts = 0; // Contador de intentos
+  int _attempts = 0;
+  
+  // TTiempo de la partida
+  Timer? _timer;
+  int _secondsElapsed = 0;
+  int _bestScore = 0; 
 
   @override
   void initState() {
     super.initState();
+    _loadBestScore();
     _setupGame();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // Cargar record mas alto en el dispositivo
+  Future<void> _loadBestScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _bestScore = prefs.getInt('best_score') ?? 0;
+    });
+  }
+
+  // Guardar record
+  Future<void> _saveBestScore() async {
+    if (_bestScore == 0 || _attempts < _bestScore) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('best_score', _attempts);
+      setState(() => _bestScore = _attempts);
+    }
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _secondsElapsed = 0;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() => _secondsElapsed++);
+    });
   }
 
   void _setupGame() {
@@ -51,27 +88,25 @@ class _MemoryBoardState extends State<MemoryBoard> {
       _firstIndex = null;
       _wait = false;
       _attempts = 0;
+      _startTimer();
     });
   }
 
   void _onCardTap(int index) {
     if (_wait || _cardFliped[index]) return;
 
-    setState(() {
-      _cardFliped[index] = true;
-    });
+    setState(() => _cardFliped[index] = true);
 
     if (_firstIndex == null) {
       _firstIndex = index;
     } else {
-      _attempts++; // Incrementamos el intento cuando se voltea la segunda carta
-      
+      _attempts++;
       if (_shuffledColors[_firstIndex!] == _shuffledColors[index]) {
         _firstIndex = null;
         _checkWin();
       } else {
         _wait = true;
-        Timer(const Duration(milliseconds: 800), () {
+        Timer(const Duration(milliseconds: 700), () {
           setState(() {
             _cardFliped[_firstIndex!] = false;
             _cardFliped[index] = false;
@@ -84,18 +119,18 @@ class _MemoryBoardState extends State<MemoryBoard> {
   }
 
   void _checkWin() {
-    if (_cardFliped.every((bool flipped) => flipped)) {
+    if (_cardFliped.every((flipped) => flipped)) {
+      _timer?.cancel();
+      _saveBestScore();
       showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Text("¡Ganaste!"),
-          content: Text("Completaste el tablero en $_attempts intentos."),
+          title: const Text("¡Victoria Unimetana!"),
+          content: Text("Intentos: $_attempts\nTiempo: $_secondsElapsed seg.\nMejor récord: $_bestScore"),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _setupGame();
-              },
+              onPressed: () { Navigator.pop(context); _setupGame(); },
               child: const Text("Jugar de nuevo"),
             )
           ],
@@ -109,49 +144,39 @@ class _MemoryBoardState extends State<MemoryBoard> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("MetroMemory"),
-        actions: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text("Intentos: $_attempts", style: const TextStyle(fontSize: 18)),
-            ),
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          const SizedBox(height: 10),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 6, // 6 columnas
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-              ),
-              itemCount: 36, // 36 cartas en total
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () => _onCardTap(index),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: _cardFliped[index] 
-                          ? _shuffledColors[index] 
-                          : const Color.fromARGB(255, 195, 104, 7), // Color de la carta boca abajo
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    child: Center(
-                      child: _cardFliped[index] 
-                          ? null 
-                          : const Icon(Icons.help_outline, color: Colors.white, size: 20),
-                    ),
-                  ),
-                );
-              },
+        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(30),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Text(
+              "Tiempo: $_secondsElapsed s | Intentos: $_attempts | Récord: ${_bestScore == 0 ? '-' : _bestScore}",
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
-        ],
+        ),
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(15),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 6,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+        ),
+        itemCount: 36,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () => _onCardTap(index),
+            child: Container(
+              decoration: BoxDecoration(
+                color: _cardFliped[index] ? _shuffledColors[index] : const Color(0xFFC36807),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+              ),
+              child: _cardFliped[index] ? null : const Icon(Icons.help_outline, color: Colors.white),
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _setupGame,

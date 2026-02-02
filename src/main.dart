@@ -38,7 +38,7 @@ class _MemoryBoardState extends State<MemoryBoard> {
   bool _wait = false;
   int _attempts = 0;
   
-  // TTiempo de la partida
+  // Variables de Requerimientos: Tiempo y Persistencia
   Timer? _timer;
   int _secondsElapsed = 0;
   int _bestScore = 0; 
@@ -56,7 +56,7 @@ class _MemoryBoardState extends State<MemoryBoard> {
     super.dispose();
   }
 
-  // Cargar record mas alto en el dispositivo
+  // Carga el récord guardado en el dispositivo
   Future<void> _loadBestScore() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -64,7 +64,7 @@ class _MemoryBoardState extends State<MemoryBoard> {
     });
   }
 
-  // Guardar record
+  // Guarda el récord si los intentos actuales son menores al mejor puntaje
   Future<void> _saveBestScore() async {
     if (_bestScore == 0 || _attempts < _bestScore) {
       final prefs = await SharedPreferences.getInstance();
@@ -146,12 +146,26 @@ class _MemoryBoardState extends State<MemoryBoard> {
         title: const Text("MetroMemory"),
         centerTitle: true,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(30),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 5),
-            child: Text(
-              "Tiempo: $_secondsElapsed s | Intentos: $_attempts | Récord: ${_bestScore == 0 ? '-' : _bestScore}",
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          preferredSize: const Size.fromHeight(40),
+          child: Container(
+            color: Colors.white.withOpacity(0.9),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Text(
+                  "Tiempo: $_secondsElapsed s", 
+                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)
+                ),
+                Text(
+                  "Intentos: $_attempts", 
+                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)
+                ),
+                Text(
+                  "Récord: ${_bestScore == 0 ? '-' : _bestScore}", 
+                  style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold, fontSize: 15)
+                ),
+              ],
             ),
           ),
         ),
@@ -167,7 +181,8 @@ class _MemoryBoardState extends State<MemoryBoard> {
         itemBuilder: (context, index) {
           return GestureDetector(
             onTap: () => _onCardTap(index),
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
               decoration: BoxDecoration(
                 color: _cardFliped[index] ? _shuffledColors[index] : const Color(0xFFC36807),
                 borderRadius: BorderRadius.circular(10),

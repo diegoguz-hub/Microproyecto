@@ -170,28 +170,54 @@ class _MemoryBoardState extends State<MemoryBoard> {
           ),
         ),
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(15),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 6,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-        ),
-        itemCount: 36,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () => _onCardTap(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              decoration: BoxDecoration(
-                color: _cardFliped[index] ? _shuffledColors[index] : const Color(0xFFC36807),
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+      body: Center(
+        child: SingleChildScrollView( 
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 550), 
+                child: AspectRatio(
+                  aspectRatio: 1.0, 
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(15),
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(), 
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 6,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      childAspectRatio: 1.0,
+                    ),
+                    itemCount: 36,
+                    itemBuilder: (context, index) {
+                      return MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () => _onCardTap(index),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            decoration: BoxDecoration(
+                              color: _cardFliped[index] 
+                                  ? _shuffledColors[index] 
+                                  : const Color(0xFFC36807),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
+                            ),
+                            child: _cardFliped[index] 
+                                ? null 
+                                : const Icon(Icons.help_outline, color: Colors.white, size: 18),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
-              child: _cardFliped[index] ? null : const Icon(Icons.help_outline, color: Colors.white),
-            ),
-          );
-        },
+              const SizedBox(height: 20), 
+            ],
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _setupGame,

@@ -11,8 +11,7 @@ class MemoryGameApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Memory Unimet',
-      theme: ThemeData(primarySwatch: Colors.indigo),
+      title: 'Metro memory',
       home: const MemoryBoard(),
     );
   }
@@ -26,13 +25,13 @@ class MemoryBoard extends StatefulWidget {
 }
 
 class _MemoryBoardState extends State<MemoryBoard> {
-  final List<Color> _colors = [
-    Colors.red, Colors.blue, Colors.green, Colors.yellow, Colors.orange, Colors.purple,
-    Colors.pink, Colors.teal, Colors.cyan, Colors.brown, Colors.indigo, Colors.lime,
-    Colors.amber, Colors.deepOrange, Colors.lightBlue, Colors.lightGreen, Colors.grey, Colors.black,
+  final List<String> _imagePaths  = [
+    'assets/IMGUNIMET.png','assets/IMGSAMAN.png','assets/IMGGRANIER.png' , 'assets/IMGANIMAL.png', 'assets/IMGCAPELLANIA.png','assets/IMGCIRCULO.PNG',
+    'assets/IMGCONO.png', 'assets/IMGEUGENIO.png', 'assets/IMGFARMAGO.png','assets/IMGFCE.png', 'assets/IMGFORMULASAE.png', 'assets/IMGKIOSCO.png',
+    'assets/IMGVITRAF.png', 'assets/IMGMOODLE.png','assets/IMGPITCH.png', 'assets/IMGVERDI.png', 'assets/IMGVENDU.png','assets/IMGWAWA.png',
   ];
   
-  late List<Color> _shuffledColors;
+  late List<String> _shuffledImages;
   late List<bool> _cardFliped;
   int? _firstIndex;
   bool _wait = false;
@@ -83,7 +82,7 @@ class _MemoryBoardState extends State<MemoryBoard> {
 
   void _setupGame() {
     setState(() {
-      _shuffledColors = [..._colors, ..._colors]..shuffle();
+      _shuffledImages = [..._imagePaths, ..._imagePaths]..shuffle();
       _cardFliped = List.generate(36, (index) => false);
       _firstIndex = null;
       _wait = false;
@@ -101,7 +100,7 @@ class _MemoryBoardState extends State<MemoryBoard> {
       _firstIndex = index;
     } else {
       _attempts++;
-      if (_shuffledColors[_firstIndex!] == _shuffledColors[index]) {
+      if (_shuffledImages[_firstIndex!] == _shuffledImages[index]) {
         _firstIndex = null;
         _checkWin();
       } else {
@@ -199,14 +198,17 @@ class _MemoryBoardState extends State<MemoryBoard> {
                             duration: const Duration(milliseconds: 300),
                             decoration: BoxDecoration(
                               color: _cardFliped[index] 
-                                  ? _shuffledColors[index] 
+                                  ? Colors.white
                                   : const Color(0xFFC36807),
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
                             ),
                             child: _cardFliped[index] 
-                                ? null 
-                                : const Icon(Icons.help_outline, color: Colors.white, size: 18),
+                                ? ClipRRect(borderRadius: BorderRadius.circular(8),
+                                child:Image.asset(_shuffledImages[index] ,
+                                fit: BoxFit.contain,),)
+                                :const Icon(Icons.help_outline,color:Colors.white,size:18),
+                               
                           ),
                         ),
                       );

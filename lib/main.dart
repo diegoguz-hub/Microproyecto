@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:animate_do/animate_do.dart'; 
+import 'package:shared_preferences/shared_preferences.dart'; // Para el tiempo y la persistencia
+import 'package:animate_do/animate_do.dart'; // Para las animaciones
 
 void main() => runApp(const MemoryGameApp());
 
+
+// Widget principal del juego
+// Configura la paleta de colores y el color del fondo
 class MemoryGameApp extends StatelessWidget {
   const MemoryGameApp({super.key});
 
@@ -30,6 +33,9 @@ class MemoryBoard extends StatefulWidget {
 }
 
 class _MemoryBoardState extends State<MemoryBoard> {
+
+  // Lista de las rutas de las imagenes para las cartas
+  
   final List<String> _imagePaths = [
     'assets/IMGUNIMET.png', 'assets/IMGSAMAN.png', 'assets/IMGGRANIER.png', 'assets/IMGANIMAL.png',
     'assets/IMGCAPELLANIA.png', 'assets/IMGCIRCULO.PNG', 'assets/IMGCONO.png', 'assets/IMGEUGENIO.png',
@@ -38,32 +44,31 @@ class _MemoryBoardState extends State<MemoryBoard> {
     'assets/IMGVENDU.png', 'assets/IMGWAWA.png',
   ];
 
-  late List<String> _shuffledImages;
-  late List<bool> _cardFliped;
-  int? _firstIndex;
-  bool _wait = false;
-  int _attempts = 0;
+  late List<String> _shuffledImages; // Imagenes mezcladas
+  late List<bool> _cardFliped; // Carta volteada o no
+  int? _firstIndex; //Indice de la primera carta seleccionada
+  bool _wait = false; // Bloquea clics adicionales mientras se procesa un error
+  int _attempts = 0; // Numero de intentos
 
-  // Variables de Requerimientos: Tiempo y Persistencia
-  Timer? _timer;
-  int _secondsElapsed = 0;
-  int _bestScore = 0;
+  Timer? _timer; // Cronometro
+  int _secondsElapsed = 0; // Segundos transcurridos
+  int _bestScore = 0; // Menor cantidad de intentos
 
   @override
   void initState() {
     super.initState();
-    _loadBestScore();
-    _setupGame();
+    _loadBestScore(); // Carga el record desde la memoria local al iniciar
+    _setupGame(); // Inicializar
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _timer?.cancel(); // Detiene el cronometro
     super.dispose();
   }
 
 
- // Carga el récord guardado en el dispositivo
+  // Carga el record guardado en el dispositivo
   Future<void> _loadBestScore() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -80,6 +85,8 @@ class _MemoryBoardState extends State<MemoryBoard> {
     }
   }
 
+
+  // Inicia el cronometro desde 0
   void _startTimer() {
     _timer?.cancel();
     _secondsElapsed = 0;
@@ -88,6 +95,7 @@ class _MemoryBoardState extends State<MemoryBoard> {
     });
   }
 
+  // Mezcla las cartas y reinicia todo
   void _setupGame() {
     setState(() {
       _shuffledImages = [..._imagePaths, ..._imagePaths]..shuffle();
@@ -99,19 +107,20 @@ class _MemoryBoardState extends State<MemoryBoard> {
     });
   }
 
+  // Gestiona el estado y la validacion de las cartas volteadas.
   void _onCardTap(int index) {
     if (_wait || _cardFliped[index]) return;
-    setState(() => _cardFliped[index] = true);
+    setState(() => _cardFliped[index] = true); // Voltear carta
 
     if (_firstIndex == null) {
-      _firstIndex = index;
+      _firstIndex = index; // Guardar la primera carta
     } else {
-      _attempts++;
+      _attempts++; // Sumar un intento
       if (_shuffledImages[_firstIndex!] == _shuffledImages[index]) {
-        _firstIndex = null;
+        _firstIndex = null; // Si son iguales se mantienen volteadas
         _checkWin();
       } else {
-        _wait = true;
+        _wait = true; // Si son distintas esperan y se voltean de nuevo
         Timer(const Duration(milliseconds: 700), () {
           setState(() {
             _cardFliped[_firstIndex!] = false;
@@ -124,6 +133,7 @@ class _MemoryBoardState extends State<MemoryBoard> {
     }
   }
 
+  // Verifica si todas las cartas estan volteadas para declarar Victoria
   void _checkWin() {
     if (_cardFliped.every((flipped) => flipped)) {
       _timer?.cancel();
@@ -147,6 +157,7 @@ class _MemoryBoardState extends State<MemoryBoard> {
     }
   }
 
+  // Diseño
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -186,7 +186,9 @@ class _MemoryBoardState extends State<MemoryBoard> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 10),
+              // Adaptacion fluida de la interfaz (Bonus)
               LayoutBuilder(builder: (context, constraints) {
+                // Calcula el ancho del tablero para que sea comodo en cualquier pantalla
                 double boardWidth = constraints.maxWidth > 600 ? 550 : constraints.maxWidth * 0.95;
                 return ZoomIn( 
                   duration: const Duration(milliseconds: 800),
@@ -211,7 +213,7 @@ class _MemoryBoardState extends State<MemoryBoard> {
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               decoration: BoxDecoration(
-                                color: _cardFliped[index] ? Colors.white : const Color(0xFFC36807), // NARANJA ORIGINAL
+                                color: _cardFliped[index] ? Colors.white : const Color(0xFFC36807), 
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
                               ),
